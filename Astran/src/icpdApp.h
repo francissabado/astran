@@ -23,26 +23,27 @@
 #include <wx/wx.h>
 
 
-class HybridTraits : public wxGUIAppTraits{
+class HybridTraits : public wxGUIAppTraits {
 public:
-    HybridTraits(bool gui_enabled) : wxGUIAppTraits(),
-    gui_enabled(gui_enabled) {}
-    
+        HybridTraits(bool gui_enabled) : wxGUIAppTraits(),
+        gui_enabled(gui_enabled) {
+        }
+
 private:
-    bool gui_enabled;
-    bool show_commands;
+        bool gui_enabled;
+        bool show_commands;
 };
 
-class icpdFrmApp : public wxApp{
+class icpdFrmApp : public wxApp {
 public:
-    wxString cmdFilename;
-    
+        wxString cmdFilename;
+
 private:
-    bool gui_enabled;
-    
-    bool OnInit();
-    int OnExit();
-    bool Initialize(int& argc, wchar_t **argv);
-    void CleanUp();
-    HybridTraits *CreateTraits();
+        bool gui_enabled;
+
+        bool OnInit();
+        int OnExit();
+        bool Initialize(int& argc, wchar_t **argv);
+        void CleanUp();
+        HybridTraits *CreateTraits();
 };

@@ -5,9 +5,9 @@
 #pragma once
 
 /**
- Generate the CIF file to the layout
- 
- @author Adriel Mota Ziesemer Jr., Cristiano Lazzari
+   Generate the CIF file to the layout
+
+   @author Adriel Mota Ziesemer Jr., Cristiano Lazzari
  */
 
 #include <fstream>
@@ -19,18 +19,18 @@
 #include "util.h"
 #include "rules.h"
 
-class Cif{
+class Cif {
 public:
-    Cif(string fname, Rules &actual_rules);
-    ~Cif();
-    bool cellCif(map<string, CLayout>& layouts, string top);
-    bool cif2Cadence(string designName, string top);
-    
+        Cif(string fname, Rules &actual_rules);
+        ~Cif();
+        bool cellCif(map<string, CLayout>& layouts, string top);
+        bool cif2Cadence(string designName, string top);
+
 private:
-    ofstream file;
-    Rules *rules;
-    int idx;
-    int cifmetric;
-    map<string, int> instances;
-    string filename;
+        ofstream file;
+        Rules *rules;
+        int idx;
+        int cifmetric;
+        map<string, int> instances;
+        string filename;
 };

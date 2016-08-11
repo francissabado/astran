@@ -18,7 +18,7 @@
 #include "circuit.h"
 
 class Verilog{
-public:
+public
     Verilog();
     ~Verilog();
     bool readFile(const string& nome, Circuit& netlist);
@@ -26,7 +26,7 @@ public:
 private:
 	map<string,string> parameters, assigns;
 	vector<string> inputs, outputs, inouts, wires;
-    
+
     int getValue(const string v);
     int findNet(const string v);
     bool readRange(vector<string>& words, int& n,  int& a, int& b);
