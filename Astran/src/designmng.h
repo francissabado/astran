@@ -82,6 +82,9 @@ public:
         };
 
 private:
+
+
+        //command_name/commands_lst must match order
         enum command_name {
                 // New - 2
                 NEW_DESIGN,NEW_CELL,
@@ -116,6 +119,7 @@ private:
                 CELLGEN_SELECT,
                 CELLGEN_AUTOFLOW,
                 CELLGEN_AUTOFLOW_ALL,
+                CELLGEN_AUTOFLOW_CONF,
                 CELLGEN_FOLD,
                 CELLGEN_PLACE,
                 CELLGEN_GETARCCOST,
@@ -238,6 +242,7 @@ private:
                 {"CELLGEN SELECT <str_Cell>", "Select a cell to generate the layout using Cellgen"},
                 {"CELLGEN AUTOFLOW", "Try to generate cell layout automatically in the best possible way"},
                 {"CELLGEN AUTOFLOW ALL", "Generates layouts for all autoflow."},
+                {"CELLGEN AUTOFLOW <configFile> <CellName>", "Generates layouts for all autoflow for a cell using configuration file."},
                 {"CELLGEN FOLD <int_nrIntTracks> <int_conservativeFactor>", "Fold the cell's transistors with Cellgen"},
                 {"CELLGEN PLACE <int_Saquality> <int_#Attempts> <int_WidthCost> <int_GateMissMatchCost> <int_RoutingCost> <int_RtDensityCost> <int_#GapsCost>", "Place the cell's transistors with Cellgen"},
                 {"CELLGEN GETARCCOST <int_Node1> <int_Node2>", "Get the arc cost between two nodes using Cellgen"},

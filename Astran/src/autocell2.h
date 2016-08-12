@@ -31,6 +31,7 @@ public:
         void calcArea(int nrIntTracks, int reduceMetTracks);
         void autoFlow(string lpSolverFile);
         void autoFlowAll(string lpSolverFile);
+        void autoFlowConf(string lpSolverFile, string configurationFile);
         void foldTrans();
         void placeTrans(bool ep, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC);
         void route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize);

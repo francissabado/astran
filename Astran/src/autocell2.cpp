@@ -249,6 +249,94 @@ void AutoCell::autoFlowAll(string lpSolverFile){
 }
 
 
+
+void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
+        cout << "Calling autoflow configurations" << endl;
+        ifstream configStream( configurationFile, ios::in);
+        map<string, int > configMap;
+
+        string settingsName = "";
+        char COMMENT = '*';
+        int value = 0;
+        for( string line; getline( configStream, line); ) {
+                stringstream ss( line );
+
+                if( ss.peek() == COMMENT) {
+                        continue;
+                }else{
+                        ss >> settingsName >> value;
+                        configMap.insert({settingsName, value});
+                }
+        }
+
+
+        for( map<string, int >::const_iterator it = configMap.begin(); it != configMap.end(); ++it)
+        {
+                string tmp_settingsName = it->first;
+                int tmp_Value = it->second;
+
+                cout << tmp_settingsName + " " + to_string(tmp_Value) << endl;
+
+        }
+
+        //For now assume the configuration is correct
+
+
+        int nrTracks=2, bestNrTracks, conservative=0;
+        int totalLayouts = 0;
+        bestNrTracks=nrTracks;
+        time_t start,end;
+        time (&start);
+
+        stringstream autoflowResult;
+        while(1) {
+                while(1) {
+                        cout << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
+                        autoflowLog << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
+                        calcArea(nrTracks, conservative);
+                        foldTrans();
+                        // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
+                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
+                        if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
+                        if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
+                        if(nrTracks==4) break;
+                        nrTracks++;
+                }
+                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
+                route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
+                if( compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) {
+                        time (&end);
+                        double dif = difftime (end,start);
+                        totalLayouts++;
+                        autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+
+                }
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
+
+                conservative++;
+                if(conservative>4) {
+                        cout << "Reached end autoflow" << endl;
+                        autoflowLog << "Reached end autoflow" << endl;
+                        break;
+                }
+                //throw AstranError("Could not generate cell layout automatically");
+                //throw AstranError("Reached end autoflow.");
+        }
+
+        // time (&end);
+        // double dif = difftime (end,start);
+
+        cout << "Generated Layouts: " + to_string(totalLayouts) << endl;
+        autoflowLog << "Generated Layouts: " + to_string(totalLayouts) << endl;
+
+        // cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+
+}
+
+
+
 void AutoCell::foldTrans() {
         checkState(2);
         autoflowLog << "-> Applying folding..." << endl;

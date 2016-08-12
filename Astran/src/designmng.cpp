@@ -634,6 +634,19 @@ bool DesignMng::readCommand(string cmd){
                                 autocell->autoFlowAll(lpSolverFile);
                                 break;
 
+                        case CELLGEN_AUTOFLOW_CONF: {
+                                string configFile = words[2];
+                                string cellName = words[3];
+                                autocell->selectCell( circuit.get(),upcase( cellName ));
+                                autocell->autoFlowConf(lpSolverFile, configFile);
+                                // autocell->selectCell( circuit.get(),upcase( words[2] ));
+                                // autocell->autoFlowConf(lpSolverFile, words[3] );
+
+                        }
+                        break;
+
+
+
                         case CELLGEN_FOLD:
                                 autocell->calcArea(atoi(words[2].c_str()), atoi(words[3].c_str()));
                                 autocell->foldTrans();
@@ -680,7 +693,8 @@ bool DesignMng::readCommand(string cmd){
                                 break;
                         }
                 }
-        } catch (AstranError& e) {
+        }
+        catch (AstranError& e) {
                 cout << "** ERROR: " << e.what() << endl;
                 return false;
         }
