@@ -64,7 +64,7 @@ inline string upcase(string s){
 inline int strToInt( const string &s){
         istringstream myStream(s);
         int i;
-        myStream>>i;
+        myStream >> i;
         return i;
 }
 

@@ -152,7 +152,7 @@ bool Rules::saveGDSIILayerTable(string filename) {
 string Rules::getLayerPurposeText(layerPurpose l){
         switch(l) {
         case L_DRAWING: return("drawing");
-        case L_PIN: return("pin");
+        case L_PIN: return("label");
         case L_NET: return("net");
         case L_OTHER: return "";
         }

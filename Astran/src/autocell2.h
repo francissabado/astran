@@ -30,6 +30,7 @@ public:
         void clear();
         void calcArea(int nrIntTracks, int reduceMetTracks);
         void autoFlow(string lpSolverFile);
+        void autoFlowAll(string lpSolverFile);
         void foldTrans();
         void placeTrans(bool ep, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC);
         void route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize);
@@ -146,4 +147,6 @@ public:
         void insertDistanceRuleDumb(vector<Box*> &geometries, Compaction &cpt, string last, string current, int minDist, HorV dir, layer_name l);
         void checkState(int nextState);
         bool testGap(vector<TransitorTerminal>::iterator last_it, vector<TransitorTerminal>::iterator eulerPath_it, vector<TransitorTerminal>& ordering, TransTerminalType type);
+
+
 };

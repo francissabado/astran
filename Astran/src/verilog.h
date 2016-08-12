@@ -18,11 +18,11 @@
 #include "circuit.h"
 
 class Verilog{
-public
+public:
     Verilog();
     ~Verilog();
     bool readFile(const string& nome, Circuit& netlist);
-    
+
 private:
 	map<string,string> parameters, assigns;
 	vector<string> inputs, outputs, inouts, wires;

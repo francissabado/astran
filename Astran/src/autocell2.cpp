@@ -109,11 +109,15 @@ void AutoCell::calcArea(int nrIntTracks, int reduceMetTracks) {
                 pDif_iniY = max(pDif_iniY, (center+static_cast<int>(floor(nrIntTracks/2.0))) * vGrid + (currentRules->getRule(W2CT) / 2 + currentRules->getRule(E2P1CT) + currentRules->getRule(S1DFP1)));
         }
 
+        //Sizing for the Diffusion locations
         if(currentCircuit->getCellTemplate()=="Taps close to the boundary") {
                 nDif_endY = max(currentRules->getRule(E1INDF), currentRules->getRule(S1P1P1) / 2 + currentRules->getRule(E1P1DF));
                 pDif_endY = height - nDif_endY;
         }else if(currentCircuit->getCellTemplate()=="Taps w/ continuous diff") {
-                nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(E1P1DF);
+                //Original
+                //nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(E1P1DF);
+
+                nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(S1DFP1);
                 pDif_endY = height - nDif_endY;
         }else{
                 nDif_endY = currentRules->getRule(E1P1DF) + currentRules->getRule(S1P1P1) / 2;
@@ -150,15 +154,18 @@ void AutoCell::autoFlow(string lpSolverFile){
                         cout << "-> Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
                         calcArea(nrTracks, conservative);
                         foldTrans();
-                        placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
+                        // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
+                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
                         if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
                         if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
                         if(nrTracks==4) break;
                         nrTracks++;
                 }
-                placeTrans(true, 150, 3, 4, 4, 1, 4, 2);
+                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
                 route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
-                if(compact(lpSolverFile, true, false, 50, 2, true, true, true, false, false, 3600)) break;
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
+                if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
                 conservative++;
                 if(conservative>4)
                         throw AstranError("Could not generate cell layout automatically");
@@ -167,7 +174,62 @@ void AutoCell::autoFlow(string lpSolverFile){
         time (&end);
         double dif = difftime (end,start);
         cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+
 }
+
+void AutoCell::autoFlowAll(string lpSolverFile){
+        int nrTracks=2, bestNrTracks, conservative=0;
+        int totalLayouts = 0;
+        bestNrTracks=nrTracks;
+        time_t start,end;
+        time (&start);
+
+        stringstream autoflowResult;
+        while(1) {
+                while(1) {
+                        cout << "-> Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
+                        calcArea(nrTracks, conservative);
+                        foldTrans();
+                        // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
+                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
+                        if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
+                        if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
+                        if(nrTracks==4) break;
+                        nrTracks++;
+                }
+                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
+                route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
+                if( compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) {
+                        time (&end);
+                        double dif = difftime (end,start);
+                        totalLayouts++;
+                        autoflowResult << "-> Total generation time for cell " << currentCell->getName() << endl;
+
+                }
+                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
+
+                conservative++;
+                if(conservative>4) {
+                        cout << "Reached end autoflow" << endl;
+                        break;
+                }
+                //throw AstranError("Could not generate cell layout automatically");
+                //throw AstranError("Reached end autoflow.");
+        }
+
+        // time (&end);
+        // double dif = difftime (end,start);
+
+        autoflowResult << "Generated Layouts: " + to_string(totalLayouts) << endl;
+        cout << autoflowResult.str();
+
+
+        // cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+
+}
+
 
 void AutoCell::foldTrans() {
         checkState(2);
@@ -825,7 +887,8 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         //Create M1P Layers
         list <Box>::iterator net_it;
         for ( net_it = currentLayout.layers[MET1].begin(); net_it != currentLayout.layers[MET1].end(); net_it++ )
-                if(currentNetList.isIO(net_it->getNet())) currentLayout.addEnc(*net_it,  0, MET1P);
+                if( currentNetList.isIO( net_it->getNet() ) )
+                        currentLayout.addEnc( *net_it,  0, MET1P );
 
         for (map<string,int>::iterator IOgeometries_it=IOgeometries.begin(); IOgeometries_it != IOgeometries.end(); IOgeometries_it++ ) {
                 Pin p;
@@ -846,15 +909,20 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                 if(currentCircuit->getCellTemplate()=="Taps close to the boundary") {
                         btIntervalsP.push_back(0); //IMPROVE
                         btIntervalsP.push_back(width);
-                        cntPos= currentRules->getRule(S1CTCT)/2;
-                        minDiffDist= cntPos+currentRules->getRule(W2CT)+currentRules->getRule(E2DFCT)+currentRules->getRule(S1DFDF);
+                        cntPos= currentRules->getRule(S1CTCT) / 2;
+                        minDiffDist= cntPos+currentRules->getRule(W2CT) + currentRules->getRule(E2DFCT) + currentRules->getRule(S1DFDF);
                 }else if(currentCircuit->getCellTemplate()=="Taps w/ continuous diff") {
-                        cntPos= currentRules->getRule(W2DF)/2+currentRules->getRule(E2DFCT);
-                        minDiffDist= cntPos+currentRules->getRule(W2CT)+currentRules->getRule(E2DFCT)+currentRules->getRule(S1DFDF);
-                        currentLayout.addPolygon(0, -currentRules->getRule(W2DF)/2, width, currentRules->getRule(W2DF)/2, PDIF);
-                        currentLayout.addPolygon(0, -currentRules->getRule(W2DF)/2-currentRules->getRule(E1IPDF), width, currentRules->getRule(W2DF)/2+currentRules->getRule(E1IPDF), PSEL);
-                        currentLayout.addPolygon(0, height+currentRules->getRule(W2DF)/2, width, height-currentRules->getRule(W2DF)/2, NDIF);
-                        currentLayout.addPolygon(0, height+currentRules->getRule(W2DF)/2+currentRules->getRule(E1INDF), width, height-currentRules->getRule(W2DF)/2-currentRules->getRule(E1IPDF), NSEL);
+
+                        cntPos= currentRules->getRule(W2DF)/2 + currentRules->getRule(E2DFCT);
+                        minDiffDist= cntPos + currentRules->getRule(W2CT) + currentRules->getRule(E2DFCT) + currentRules->getRule(S1DFDF);
+
+                        //Bottom Taps and diffusion
+                        currentLayout.addPolygon( 0, -currentRules->getRule(W2DF) / 2, width, currentRules->getRule(W2DF) / 2, PDIF);
+                        currentLayout.addPolygon( -0.3, -currentRules->getRule(W2DF) / 2 - currentRules->getRule(E1IPDF), width, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), PSEL);
+
+                        //Top Taps and diffusion
+                        currentLayout.addPolygon( 0, height + currentRules->getRule(W2DF) / 2, width, height-currentRules->getRule(W2DF) / 2, NDIF);
+                        currentLayout.addPolygon( -0.3, height + currentRules->getRule(W2DF) / 2 + currentRules->getRule(E1INDF), width, height-currentRules->getRule( W2DF) / 2 - currentRules->getRule(E1IPDF), NSEL);
                 }
                 //search for blocking regions in the PTAP area add its interval to a list
                 btIntervalsN=btIntervalsP;
@@ -922,8 +990,11 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                         end=++btIntervals_it;
                         if(*ini+currentRules->getRule(W2CT)+2*currentRules->getRule(E2DFCT)+2*currentRules->getRule(S1DFDF)<=*end) {
                                 btN=true;
-                                currentLayout.addPolygon(*ini+currentRules->getRule(S1DFDF)-currentRules->getRule(E1INDF), height-(currentRules->getRule(S1CTCT)/2+currentRules->getRule(W2CT)+currentRules->getRule(E2DFCT)+currentRules->getRule(E1INDF)), *end-currentRules->getRule(S1DFDF)+currentRules->getRule(E1INDF), height, NSEL);
+
+                                currentLayout.addPolygon( *ini+currentRules->getRule(S1DFDF) - currentRules->getRule(E1INDF), height - (currentRules->getRule(S1CTCT)/2+currentRules->getRule(W2CT)+currentRules->getRule(E2DFCT)+currentRules->getRule(E1INDF)), *end - currentRules->getRule(S1DFDF) + currentRules->getRule(E1INDF), height, NSEL);
+
                                 currentLayout.addPolygon(*ini+currentRules->getRule(S1DFDF), height-(currentRules->getRule(S1CTCT)/2+currentRules->getRule(W2CT)+currentRules->getRule(E2DFCT)), *end-currentRules->getRule(S1DFDF), height, NDIF);
+
                                 for(int cnt=*ini+currentRules->getRule(S1DFDF)+currentRules->getRule(E2DFCT); cnt<=*end-currentRules->getRule(S1DFDF)-currentRules->getRule(E2DFCT)-currentRules->getRule(W2CT); cnt+=currentRules->getRule(W2CT)+currentRules->getRule(S1CTCT))
                                         currentLayout.addPolygon(cnt, height-(cntPos+currentRules->getRule(W2CT)), cnt+currentRules->getRule(W2CT), height-cntPos, CONT);
                         }
@@ -936,22 +1007,62 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         currentLayout.setHeight(height);
 
         //Draw sel Borders
-        int selBorder=currentRules->getIntValue(currentCircuit->getpnSelBorder());
-        currentLayout.addPolygon(-selBorder, -selBorder, width+selBorder, cpt.getVariableVal("posNWell"), NSEL);
-        currentLayout.addPolygon(-selBorder, height+selBorder, width+selBorder, cpt.getVariableVal("posNWell"), PSEL);
 
-        currentLayout.addPolygon(0, 0, width, supWidth, MET1).setNet(currentCircuit->getGndNet());
-        currentLayout.addPolygon(0, 0, width, supWidth, MET1P);
-        currentLayout.addPolygon(0, height - supWidth, width, height, MET1).setNet(currentCircuit->getVddNet());
-        currentLayout.addPolygon(0, height - supWidth, width, height, MET1P);
+
+        //Original
+        // int selBorder=currentRules->getIntValue(currentCircuit->getpnSelBorder());
+        // currentLayout.addPolygon(-selBorder, -selBorder, width+selBorder, cpt.getVariableVal("posNWell"), NSEL);
+        // currentLayout.addPolygon(-selBorder, height+selBorder, width+selBorder, cpt.getVariableVal("posNWell"), PSEL);
+
+
+        // currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF )
+
+        //Draw sel Borders
+        int selBorder=currentRules->getIntValue(currentCircuit->getpnSelBorder());
+        currentLayout.addPolygon(-selBorder, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), width + selBorder, cpt.getVariableVal("posNWell"), NSEL);
+
+        currentLayout.addPolygon(-selBorder, cpt.getVariableVal("posNWell"), width + selBorder, height - ( currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF )), PSEL);
+
+        //GND Supply
+        // currentLayout.addPolygon(0, 0, width, supWidth, MET1).setNet(currentCircuit->getGndNet());
+        // currentLayout.addPolygon(0, 0, width, supWidth, MET1P);
+        currentLayout.addPolygon(0, -supWidth, width, supWidth, MET1).setNet(currentCircuit->getGndNet());
+        currentLayout.addPolygon(0, -supWidth, width, supWidth, MET1P);
+
+        //VDD Supply
+        //currentLayout.addPolygon(0, height - supWidth, width, height, MET1).setNet(currentCircuit->getVddNet());
+        //currentLayout.addPolygon(0, height - supWidth, width, height, MET1P);
+
+        currentLayout.addPolygon(0, height - supWidth, width, height + supWidth, MET1).setNet(currentCircuit->getVddNet());
+        currentLayout.addPolygon(0, height - supWidth, width, height + supWidth, MET1P);
+
+
+        //PrBoundary
         currentLayout.addPolygon(0, 0, width, height, CELLBOX);
+
+        //NWELL Border
         int nWellBorder=currentRules->getIntValue(currentCircuit->getnWellBorder());
         currentLayout.addPolygon(-nWellBorder, height + nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), NWEL);
-        currentLayout.addPolygon(-nWellBorder, -nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), PWEL);
+
+        //Don't need Pwell
+        //currentLayout.addPolygon(-nWellBorder, -nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), PWEL);
 
 
         //	currentLayout.merge();
-        currentCircuit->insertLayout(currentLayout);
+        string layoutName = currentLayout.getName();
+
+        if( currentCircuit->getLayout( layoutName ) == NULL) {
+                currentCircuit->insertLayout(currentLayout);
+        }else{
+                int i = 0;
+                while( currentCircuit->getLayout( layoutName + "_atmp_" + to_string(i) ) != NULL ) {
+                        i++;
+                }
+                currentLayout.setName(layoutName + "_atmp_" + to_string(i));
+                currentCircuit->insertLayout(currentLayout);
+        }
+
+        // currentCircuit->insertLayout(currentLayout);
         cout << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
         state++;
         return true;
@@ -1423,6 +1534,8 @@ void AutoCell::createNode(vector<Box*> &geometries, Compaction &cpt, list<Elemen
 
         //special rules for wide metals and p/nplus enclusure of poly
         minDist = (l==MET1 ? currentRules->getRule(S2M1M1) : currentRules->getRule(S1P1P1));
+        int tapsDist = (currentRules->getRule(W2DF) / 2) + currentRules->getRule(S1DFP1);
+
         if(l==MET1) {
                 if (currentNetList.getNetName(rt->getNet(elements_it->met[pos])) != currentCircuit->getGndNet())
                         cpt.insertConstraint("yGNDb", "y" + currentGeo + "a", CP_MIN, minDist);
@@ -1436,8 +1549,11 @@ void AutoCell::createNode(vector<Box*> &geometries, Compaction &cpt, list<Elemen
                 if (pos == trackPos.size() - 1)
                         createTrack(geometries, cpt, currentGeo, "VDD", netName, l, V);
         }else if(l==POLY) {
-                cpt.insertConstraint("ZERO", "y" + currentGeo + "a", CP_MIN, minDist / 2);
-                cpt.insertConstraint("y" + currentGeo + "b", "height", CP_MIN, minDist / 2);
+                //Limit for the Distance
+                // cpt.insertConstraint("ZERO", "y" + currentGeo + "a", CP_MIN, minDist / 2);
+                // cpt.insertConstraint("y" + currentGeo + "b", "height", CP_MIN, minDist / 2);
+                cpt.insertConstraint("ZERO", "y" + currentGeo + "a", CP_MIN, tapsDist);
+                cpt.insertConstraint("y" + currentGeo + "b", "height", CP_MIN, tapsDist);
         }
 
         //line ends rule
