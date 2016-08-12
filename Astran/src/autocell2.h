@@ -80,6 +80,8 @@ public:
         };
         void printGraph();
 
+        ofstream autoflowLog;
+
 protected:
         int hGrid, vGrid, supplySize, height;
         int vdd,gnd,poly_priority,metal_priority,width_priority,gatespacing_priority;
