@@ -178,6 +178,8 @@ void AutoCell::autoFlow(string lpSolverFile){
                         nrTracks++;
                 }
                 placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
+
+
                 route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
@@ -253,6 +255,12 @@ void AutoCell::autoFlowAll(string lpSolverFile){
 void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
         cout << "Calling autoflow configurations" << endl;
         ifstream configStream( configurationFile, ios::in);
+
+        if (!configStream.is_open()) {
+                cout << "Failed to open file: " + configurationFile << endl;
+                return;
+        }
+
         map<string, int > configMap;
 
         string settingsName = "";
@@ -280,43 +288,150 @@ void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
         }
 
         //For now assume the configuration is correct
+        int CONSERVATIVE;
+        int NR_TRACKS;
+        int WIDTH_COST;
+        int GATE_MISMATCH_COST;
+        int ROUTING_COST;
+        int ROUTING_DENSITY_COST;
+        int NR_GAPS_COST;
+        int NR_ITERATIONS;
+        int NR_ATTEMPTS;
+        int HORIZONTAL_POLY;
+        int ALIGN_DIFFS;
+        int REDUCE_VERTICAL_ROUTING;
+        int OPTIMIZE;
+        int DIFFUSION_STRETCHING;
+        int GRIDDED_POLY;
+        int REDUNDANT_DIFF_CNTS;
+        int MAX_DFF_CNTS;
+        int ALIGN_DIFFUSION_CNTS;
+        int REDUCE_L_TURNS;
+        int ENABLE_DFM;
+        int EXPERIMENTAL;
+        int DEBUG;
+        int TIME_LIMIT;
+
+        try{
+                CONSERVATIVE = configMap.at("CONSERVATIVE");
+                NR_TRACKS = configMap.at("NR_TRACKS");
+                WIDTH_COST = configMap.at("WIDTH_COST");
+                GATE_MISMATCH_COST = configMap.at("GATE_MISMATCH_COST");
+                ROUTING_COST = configMap.at("ROUTING_COST");
+                ROUTING_DENSITY_COST = configMap.at("ROUTING_DENSITY_COST");
+                NR_GAPS_COST = configMap.at("NR_GAPS_COST");
+                NR_ITERATIONS = configMap.at("NR_ITERATIONS");
+                NR_ATTEMPTS = configMap.at("NR_ATTEMPTS");
+                HORIZONTAL_POLY = configMap.at("HORIZONTAL_POLY");
+                ALIGN_DIFFS = configMap.at("ALIGN_DIFFS");
+                REDUCE_VERTICAL_ROUTING = configMap.at("REDUCE_VERTICAL_ROUTING");
+                OPTIMIZE = configMap.at("OPTIMIZE");
+                DIFFUSION_STRETCHING = configMap.at("DIFFUSION_STRETCHING");
+                GRIDDED_POLY = configMap.at("GRIDDED_POLY");
+                REDUNDANT_DIFF_CNTS = configMap.at("REDUNDANT_DIFF_CNTS");
+                MAX_DFF_CNTS = configMap.at("MAX_DFF_CNTS");
+                ALIGN_DIFFUSION_CNTS = configMap.at("ALIGN_DIFFUSION_CNTS");
+                REDUCE_L_TURNS = configMap.at("REDUCE_L_TURNS");
+                ENABLE_DFM = configMap.at("ENABLE_DFM");
+                EXPERIMENTAL = configMap.at("EXPERIMENTAL");
+                DEBUG = configMap.at("DEBUG");
+                TIME_LIMIT = configMap.at("TIME_LIMIT");
+
+        }catch(const std::out_of_range& e) {
+                cout << "Out of range error: " << e.what() << endl;
+                return;
+        }
+
+        // ALIGN_DIFFS 0
+        // ALIGN_DIFFUSION_CNTS 10
+        // CONSERVATIVE 0
+        // DEBUG 0
+        // DIFFUSION_STRETCHING 1
+        // ENABLE_DFM 1
+        // EXPERIMENTAL 0
+        // GATE_MISSMATCH_COST 4
+        // GRIDDED_POLY 0
+        // HORIZONTAL_POLY 1
+        // NR_ATTEMPTS 3
+        // NR_GAPS_COST 2
+        // NR_INTERNAL_TRACKS 2
+        // NR_ITERATIONS 150
+        // OPTIMIZE 1
+        // REDUCE_L_TURNS 1
+        // REDUCE_VERTICAL_ROUTING 0
+        // REDUNDANT_DIFF_CNTS 50
+        // ROUTING_COST 1
+        // ROUTING_DENSITY_COST 4
+        // TIME_LIMIT 3600
+        // WIDTH_COST 3
 
 
-        int nrTracks=2, bestNrTracks, conservative=0;
+
+
+
+        int bestNrTracks;
         int totalLayouts = 0;
-        bestNrTracks=nrTracks;
+        bestNrTracks = NR_TRACKS;
         time_t start,end;
         time (&start);
+        bool speculate = false;
 
         stringstream autoflowResult;
         while(1) {
                 while(1) {
-                        cout << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
-                        autoflowLog << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
-                        calcArea(nrTracks, conservative);
+                        cout << "Trying with " << NR_TRACKS << " tracks and conservative = " << CONSERVATIVE << " ..." << endl;
+                        autoflowLog << "Trying with " << NR_TRACKS << " tracks and conservative = " << CONSERVATIVE << " ..." << endl;
+
+                        calcArea(NR_TRACKS, CONSERVATIVE);
                         foldTrans();
+
+                        speculate = false;
                         // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
-                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
-                        if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
-                        if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
-                        if(nrTracks==4) break;
-                        nrTracks++;
+                        // void AutoCell::placeTrans(bool speculate, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC) {
+                        placeTrans( speculate, NR_ITERATIONS, NR_ATTEMPTS, WIDTH_COST, GATE_MISMATCH_COST, ROUTING_COST, ROUTING_DENSITY_COST, NR_GAPS_COST); //try with , 8)
+                        if(currentNetList.getMaxCongestioning()<=6 && NR_TRACKS==2) break;
+                        if(currentNetList.getMaxCongestioning()<=8 && NR_TRACKS==3) break;
+                        if(NR_TRACKS==4) break;
+                        NR_TRACKS++;
                 }
-                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
-                route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+                speculate = true;
+
+                placeTrans( speculate, NR_ITERATIONS, NR_ATTEMPTS, WIDTH_COST, GATE_MISMATCH_COST, ROUTING_COST, ROUTING_DENSITY_COST, NR_GAPS_COST);
+                //placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
+                // route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+
+                // void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize)
+                route(HORIZONTAL_POLY, ALIGN_DIFFS, (currentNetList.getMaxCongestioning()<=5 ? true : false), OPTIMIZE);
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
-                if( compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) {
+
+                // bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly, int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, bool enableDFM, bool experimental, bool debug, int timeLimit)
+                bool generatedLayout = compact(lpSolverFile, DIFFUSION_STRETCHING, GRIDDED_POLY, REDUNDANT_DIFF_CNTS, MAX_DFF_CNTS, ALIGN_DIFFUSION_CNTS, REDUCE_L_TURNS, ENABLE_DFM, EXPERIMENTAL, DEBUG, TIME_LIMIT);
+
+                if( generatedLayout ) {
                         time (&end);
                         double dif = difftime (end,start);
                         totalLayouts++;
                         autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
 
+                }else if( DEBUG != 1) {
+                        //Enabled the debug to allow generation of layout
+                        DEBUG = 1;
+                        generatedLayout = compact(lpSolverFile, DIFFUSION_STRETCHING, GRIDDED_POLY, REDUNDANT_DIFF_CNTS, MAX_DFF_CNTS, ALIGN_DIFFUSION_CNTS, REDUCE_L_TURNS, ENABLE_DFM, EXPERIMENTAL, DEBUG, TIME_LIMIT);
+                        if( generatedLayout ) {
+                                time (&end);
+                                double dif = difftime (end,start);
+                                totalLayouts++;
+                                autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+                        }
+
+                        //Set to default DEBUG
+                        DEBUG = configMap.at("DEBUG");
                 }
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
 
-                conservative++;
-                if(conservative>4) {
+                CONSERVATIVE++;
+                if(CONSERVATIVE > 4) {
                         cout << "Reached end autoflow" << endl;
                         autoflowLog << "Reached end autoflow" << endl;
                         break;
