@@ -528,6 +528,7 @@ bool CellNetlst::transPlacement(bool newPl, int saquality, int nrattempts, int w
         ngCost=ngC;
         this->vddNet=vddNet;
         this->gndNet=gndNet;
+        bool PRINT_PROGRESS = false;
 
         unsigned long i;
         if(newPl) {
@@ -563,7 +564,8 @@ bool CellNetlst::transPlacement(bool newPl, int saquality, int nrattempts, int w
                 custo_atual=custo_anterior=getCost();
                 //		cout << "- Running Threshold Accept algorithm (" << at << "): " << endl;
                 //		*this = SimulatedAnnealing<CellNetlst>(*this,saquality,false,true,!ep || at!=1);
-                *this = ThresholdAccept<CellNetlst>(*this,saquality,false,true,true);
+                // toOptimize ThresholdAccept(toOptimize& initial_solution, double quality_factor, bool greedy=false, bool print_progress=true, bool high_threshold=false){
+                *this = ThresholdAccept<CellNetlst>(*this,saquality,false,PRINT_PROGRESS,true);
                 cout << endl;
                 if(best_cost>=getCost()) {
                         best=at;

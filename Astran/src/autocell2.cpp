@@ -221,6 +221,7 @@ void AutoCell::autoFlowAll(string lpSolverFile){
                 route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
+
                 if( compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) {
                         time (&end);
                         double dif = difftime (end,start);
@@ -795,6 +796,7 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         cpt.insertConstraint("ZERO", "yPDiffb", CP_EQ, pDif_endY);
         cpt.insertConstraint("ZERO", "yGNDb", CP_EQ, max(currentRules->getIntValue(currentCircuit->getSupplyVSize()), currentRules->getRule(W1M1)) / 2);
         cpt.insertConstraint("yVDDa", "height", CP_EQ, max(currentRules->getIntValue(currentCircuit->getSupplyVSize()), currentRules->getRule(W1M1)) / 2);
+
 
         list<Element>::iterator lastElement_it;
         vector<string> lastMetNodes(trackPos.size(), ""), lastPolNodes(trackPos.size(), ""), lastContacts(trackPos.size(), "");
