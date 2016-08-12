@@ -56,6 +56,7 @@ public:
         //  ~Compaction();
 
         void insertVal( string name );
+        void setLPName(string lp_Name);
         void insertConstraint( string v1 );
         void insertConstraint( string v1, string v2, cp_cons_tp type, int val );
         void insertConstraint( string v1, string v2, cp_cons_tp type, string t );
@@ -71,7 +72,11 @@ public:
         void forceSOS( string v );
         void insertLPMinVar( string v );
         void insertLPMinVar( string v, int i );
-
+        int proccessLPSol();
+        int solveLP(string lpSolverFile, int timeLimit, string otherParams = "") ;
+        bool isConstraintsGenerated();
+        bool generateLPConstraints();
+        
         int solve(string lpSolverFile, int timeLimit);
 
         int getVariableVal( string name );

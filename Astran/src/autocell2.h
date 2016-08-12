@@ -35,7 +35,13 @@ public:
         void foldTrans();
         void placeTrans(bool ep, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC);
         void route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize);
-        bool compact(string lpSolverFile, int diffStretching, int griddedPolly, int rdCntsCost, int maxDiffConts, int alignDiffConts, int reduceLturns, bool enableDFM, bool experimental, bool debug, int timeLimit);
+//        bool compact(string lpSolverFile, int diffStretching, int griddedPolly, 
+//        int rdCntsCost, int maxDiffConts, int alignDiffConts, int reduceLturns, 
+//        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename);
+        
+        bool compact(string lpSolverFile, int diffStretching, int griddedPoly,
+        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, 
+        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename = "ILPmodel");
         void selectCell(Circuit* c, string cell);
         void setMetPriority(int x) {
                 metal_priority=x;

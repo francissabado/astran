@@ -796,7 +796,7 @@ void DesignMng::listAllLayouts(){
         map<string, CLayout>* allLayouts = circuit->getLayouts();
 
         cout << "Printing out all Layouts" << endl;
-        for( map<string, CLayout >::const_iterator it = allLayouts->begin(); it != allLayouts->end(); ++it)
+        for( map<string, CLayout >::iterator it = allLayouts->begin(); it != allLayouts->end(); ++it)
         {
                 cout << it->first << it->second.getName() << endl;
                 // std::cout << it->first << " " << it->second.first << " " << it->second.second << "\n";

@@ -749,7 +749,9 @@ void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool opt
         state = 5;
 }
 
-bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly, int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, bool enableDFM, bool experimental, bool debug, int timeLimit) {
+bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
+        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, 
+        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
         checkState(5);
         cout << "-> Compacting layout..." << endl;
         autoflowLog << "-> Compacting layout..." << endl;
@@ -774,7 +776,7 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
 
         map<string, int> IOgeometries;
 
-        Compaction cpt(CP_LP, "ILPmodel");
+        Compaction cpt(CP_LP, lp_filename);
         vector<Box*> geometries;
 
         cpt.insertConstraint("ZERO", "UM", CP_EQ, 1);
@@ -1091,9 +1093,12 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         cpt.forceIntegerVar("width_gpos");
         cpt.insertLPMinVar("width", 5000);
 
+        //This is the call to for the solver
         if (!cpt.solve(lpSolverFile, timeLimit))
                 return false;
 
+
+        //Code to process all the variables gathered from the .sol file
         for (int i = 0; i < geometries.size(); i++) {
 
                 int xa = cpt.getVariableVal("x" + to_string(i) + "a");
@@ -1283,6 +1288,7 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
 
 
         //	currentLayout.merge();
+        //Code to add the layout to the list
         string layoutName = currentLayout.getName();
 
         if( currentCircuit->getLayout( layoutName ) == NULL) {
