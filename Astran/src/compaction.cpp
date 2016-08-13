@@ -16,6 +16,10 @@ Compaction::Compaction( cp_algo a,string name) {
         constraints.clear();
 }
 
+string Compaction::getLPName(){
+        return lp_filename;
+}
+
 void Compaction::setLPName(string lp_Name){
         lp_filename = lp_Name;
 }
@@ -23,7 +27,7 @@ void Compaction::setLPName(string lp_Name){
 /** Insert new variable. */
 void Compaction::insertVal( string name ) {
         variables[name] = 0;
-        //  cout << "INS VAR " << name << endl;
+        cout << "INS VAR " << name << endl;
 }
 
 /** Insert new constraint. */
@@ -546,8 +550,8 @@ int Compaction::solve(string lpSolverFile, int timeLimit, string otherParams) {
 
 
         //Solve using lpSolver
-        // solveLP(lpSolverFile, timeLimit, otherParams);
-        remoteSolveLP(lpSolverFile, timeLimit, otherParams);
+        solveLP(lpSolverFile, timeLimit, otherParams);
+        //remoteSolveLP(lpSolverFile, timeLimit, otherParams);
         //Other parameters possible
         // int Compaction::solveLP(string lpSolverFile, int timeLimit, string otherParams) {
 
@@ -622,6 +626,7 @@ int Compaction::solve(string lpSolverFile, int timeLimit, string otherParams) {
         // fclose(stream);
         //
         // return 1;
+        return 1;
 }
 
 
@@ -671,6 +676,7 @@ int Compaction::solveLP(string lpSolverFile, int timeLimit, string otherParams) 
         //Calling LP Solver
         string const solFileName = lp_filename + ".sol";
 
+        //Create backup
         if (FILE *file = fopen(solFileName.c_str(), "r")) {
                 fclose(file);
                 const string newName = lp_filename + to_string(time(NULL)) + ".sol";
@@ -722,16 +728,22 @@ int Compaction::remoteSolveLP(string lpSolverFile, int timeLimit, string otherPa
         //Remote settingsName
         string user = "fsabado";
         string server = "digisrv2";
-        string projectDir = "~/gurobiRun";
+        string projectDir = "~/tmpGurobi";
+
+        string const lpFileName = lp_filename + ".lp";
+        string const solFileName = lp_filename + ".sol";
 
         //Copying setup file
         // FILE *remoteLog = _open("cp")
-        //Assumes that astran is run on current directory
-        int result = system("./setupRemote.sh");
+        //Assumes that astran is run on current directory and sshfs is set up
+        // int result = system("cp ./ILPmodel.lp ~/tmpGurobi/");
+        // string cpLP_cmd = "cp " + " ./" + lpFileName + " " + projectDir + "/";
+        string cpLP_cmd = "cp ./" + lpFileName + " " + projectDir + "/";
+        int lpCP = system(cpLP_cmd.c_str());
 
         //Calling LP Solver
-        string const solFileName = lp_filename + ".sol";
 
+        //Create Backup
         if (FILE *file = fopen(solFileName.c_str(), "r")) {
                 fclose(file);
                 const string newName = lp_filename + to_string(time(NULL)) + ".sol";
@@ -740,11 +752,20 @@ int Compaction::remoteSolveLP(string lpSolverFile, int timeLimit, string otherPa
 
         remove(solFileName.c_str());
 
-        string cmd = "\"" + lpSolverFile + "\" TimeLimit=" + to_string(timeLimit) + " ResultFile=" + solFileName + " " + otherParams + " " + lp_filename + ".lp";
+        // ssh fsabado@digisrv2.ddns.uark.edu 'source /opt/gurobi652/setup.bash;cd /home/fsabado/Tezzaron3D_project/GDSFiles/charteredNCL;gurobi_cl TimeLimit=100 ResultFile=ILPmodel.sol ./ILPmodel.lp'
 
-        cout << "-> Running command: " << cmd << endl;
+        // remove(solFileName.c_str());
+        // string cmd = "\"" + lpSolverFile + "\" TimeLimit=" + to_string(timeLimit) + " ResultFile=" + solFileName + " " + otherParams + " " + lp_filename + ".lp";
+
+        // string cmd = "ssh fsabado@digisrv2.ddns.uark.edu \'source /opt/gurobi652/setup.bash;cd /home/fsabado/tmpGurobi;gurobi_cl TimeLimit=100 ResultFile=ILPmodel.sol ./ILPmodel.lp\'";
+
+        string sshCmd = "ssh fsabado@digisrv2.ddns.uark.edu \'source /opt/gurobi652/setup.bash;cd /home/fsabado/tmpGurobi;";
+        string cmd = "\"" + lpSolverFile + "\" TimeLimit=" + to_string(timeLimit) + " ResultFile=" + solFileName + " " + otherParams + " " + lpFileName;
+
+        cout << "-> Running command: " << sshCmd + cmd << endl;
 
         FILE *solverLog = _popen(cmd.c_str(), "r");
+
 
         if(solverLog == NULL)
                 throw AstranError("Problem executing: " + cmd);
@@ -771,6 +792,11 @@ int Compaction::remoteSolveLP(string lpSolverFile, int timeLimit, string otherPa
         }
 
         _pclose(solverLog);
+        // int result1 = system("cp ~/tmpGurobi/ILPmodel.sol ./ILPmodel.sol");
+        string cpSol_cmd = "cp " + projectDir + "/" + solFileName + " ./" +  solFileName;
+        int solCP = system( cpSol_cmd.c_str());
+
+
         return 1;
 
 }

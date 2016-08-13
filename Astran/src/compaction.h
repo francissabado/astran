@@ -55,6 +55,8 @@ public:
         Compaction( cp_algo a, string name );
         //  ~Compaction();
 
+        string getLPName();
+
         void insertVal( string name );
         void setLPName(string lp_Name);
         void insertConstraint( string v1 );
@@ -79,6 +81,7 @@ public:
         bool generateLPConstraints();
 
         int solve(string lpSolverFile, int timeLimit = 3600, string otherParams = "");
+
 
         int getVariableVal( string name );
 

@@ -29,8 +29,17 @@ public:
         ~AutoCell();
         void clear();
         void calcArea(int nrIntTracks, int reduceMetTracks);
-        void autoFlow(string lpSolverFile);
+        // void autoFlow(string lpSolverFile);
         void autoFlowAll(string lpSolverFile);
+
+        // True = 1; False = 0
+        void autoFlow(string lpSolverFile, int conservative = 0, int nr_tracks = 2,
+                                int width_cost = 3, int gate_mismatch_cost = 4, int routing_cost = 4, int routing_density_cost = 4,
+                                int nr_gaps_cost = 2, int nr_iterations = 150, int nr_attempts = 3, int horizontal_poly = 1, int align_diffs = 0,
+                                int reduce_vertical_routing = 0, int optimize = 1, int diffusion_stretching = 1, int gridded_poly = 0,
+                                int redundant_diff_cnts = 50, int max_dff_cnts = 10, int align_diffusion_cnts = 1, int reduce_l_turns = 1,
+                                int enable_dfm = 1, int experimental = 0, int debug = 0, int time_limit = 3600, int relax_height = 0);
+
         void autoFlowConf(string lpSolverFile, string configurationFile);
         void foldTrans();
         void placeTrans(bool ep, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC);
@@ -87,7 +96,7 @@ public:
         };
         void printGraph();
 
-        ofstream autoflowLog;
+        // ofstream autoflowLog;
 
 protected:
         int hGrid, vGrid, supplySize, height;
@@ -97,7 +106,9 @@ protected:
         int nSize,pSize;
         int center;
         int pDif_iniY, pDif_endY, nDif_iniY, nDif_endY;
+
         int diffStretching, griddedPoly, rdCntsCost, alignDiffConts, reduceLturns, maxDiffCnts, enableDFM, experimental,reduceMetTracks;
+
         int index, reduceVRt;
         bool hPoly;
 

@@ -67,7 +67,7 @@ void Router::setup(int sX, int sY, int sZ){
                         if(netIndex.find(nets_it->name)==netIndex.end()) netIndex[nets_it->name]=i++;
                         Circuit::Interface* tmp_int=currentCircuit->getInterface(nets_it->name);
                         if(tmp_int) {
-                                //					cerr << netIndex[nets_it->name] << " " << tmp_int->pos.getX()+currentCircuit->getLMargin() << " " << tmp_int->pos.getY()+currentCircuit->getBMargin() << endl;
+                                cerr << netIndex[nets_it->name] << " " << tmp_int->pos.getX()+currentCircuit->getLMargin() << " " << tmp_int->pos.getY()+currentCircuit->getBMargin() << endl;
                                 rt.addNodetoNet(netIndex[nets_it->name], rt.getPos(tmp_int->pos.getX()+currentCircuit->getLMargin(),tmp_int->pos.getY()+currentCircuit->getBMargin(), 2));
                         }
                         for(list<InstancePin>::iterator nodes_it=nets_it->insts.begin(); nodes_it!=nets_it->insts.end(); nodes_it++) {

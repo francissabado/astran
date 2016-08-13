@@ -445,7 +445,7 @@ int CellNetlst::getCost(){
                 nName=getNetName(pos);
                 if(boundBoxNets_ini[pos]!=-1 && nName!=vddNet && nName!=gndNet) {
                         wRouting+=boundBoxNets_end[pos]-boundBoxNets_ini[pos];
-                        //cout << nName << "-" << boundBoxNets_ini[pos] <<"-"<< boundBoxNets_end[pos] << endl;
+                        cout << nName << "-" << boundBoxNets_ini[pos] <<"-"<< boundBoxNets_end[pos] << endl;
                         for(x=boundBoxNets_ini[pos]; x<=boundBoxNets_end[pos]; x++)
                                 ++congestioning[x];
                 }

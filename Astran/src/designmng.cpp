@@ -630,9 +630,9 @@ bool DesignMng::readCommand(string cmd){
                                 autocell->autoFlow(lpSolverFile);
                                 break;
 
-                        case CELLGEN_AUTOFLOW_ALL:
-                                autocell->autoFlowAll(lpSolverFile);
-                                break;
+                        // case CELLGEN_AUTOFLOW_ALL:
+                        //         autocell->autoFlowAll(lpSolverFile);
+                        //         break;
 
                         case CELLGEN_AUTOFLOW_CONF: {
                                 string configFile = words[2];

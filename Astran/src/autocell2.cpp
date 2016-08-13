@@ -5,14 +5,14 @@
 #include "autocell2.h"
 
 AutoCell::AutoCell() : currentCell(NULL), state(0), index(0) {
-        string file_autoflowLog = "autoflow.log";
-        remove(file_autoflowLog.c_str());
-        autoflowLog.open(file_autoflowLog.c_str());
+        // string file_//autoflowLog = "autoflow.log";
+        // remove(file_//autoflowLog.c_str());
+        // //autoflowLog.open(file_//autoflowLog.c_str());
 }
 
 AutoCell::~AutoCell() {
-        autoflowLog.flush();
-        autoflowLog.close();
+        // //autoflowLog.flush();
+        // //autoflowLog.close();
 }
 
 AutoCell::Element* AutoCell::createElement(int vcost, int nDiffIni, int pDiffIni, int nDiffEnd, int pDiffEnd, TransTerminalType type) {
@@ -27,7 +27,7 @@ AutoCell::Element* AutoCell::createElement(int vcost, int nDiffIni, int pDiffIni
         tmp.diffNIni = nDiffIni;
         tmp.diffPIni = pDiffIni;
         tmp.diffPEnd = pDiffEnd;
-        //    cout << nDiffEnd << " " << nDiffIni << " " << pDiffIni << " " << pDiffEnd << endl;
+        cout << nDiffEnd << " " << nDiffIni << " " << pDiffIni << " " << pDiffEnd << endl;
         for (int x = 0; x < trackPos.size(); x++) {
                 tmp.met[x] = rt->createNode();
                 if (x) {
@@ -79,7 +79,7 @@ void AutoCell::calcArea(int nrIntTracks, int reduceMetTracks) {
         currentRules = currentCircuit->getRules();
 
         cout << "-> Calculating cell area..." << endl;
-        autoflowLog << "-> Calculating cell area..." << endl;
+        // //autoflowLog << "-> Calculating cell area..." << endl;
 
         vGrid = currentRules->getIntValue(currentCircuit->getVPitch());
         hGrid = currentRules->getIntValue(currentCircuit->getHPitch());
@@ -136,7 +136,7 @@ void AutoCell::calcArea(int nrIntTracks, int reduceMetTracks) {
 
         if(nSize<currentRules->getRule(W2DF) || pSize<currentRules->getRule(W2DF))
                 throw AstranError("P/N diffusion space is too small to fit a transistor. Try to adjust the cell template: height, nwell position, routing grid pitch or the design rules");
-        //       cout << "Resume: tracks(" << trackPos.size() << ") " << nSize << "N and " << pSize << "P" <<endl;
+        cout << "Resume: tracks(" << trackPos.size() << ") " << nSize << "N and " << pSize << "P" <<endl;
         state++;
 
 
@@ -148,7 +148,7 @@ void AutoCell::selectCell(Circuit* c, string cell) {
         currentCircuit = c;
         currentCell = currentCircuit->getCellNetlst(cell);
         cout << "-> Selecting cell netlist: " << currentCell->getName() << endl;
-        autoflowLog << "-> Selecting cell netlist: " << currentCell->getName() << endl;
+        //autoflowLog << "-> Selecting cell netlist: " << currentCell->getName() << endl;
         currentNetList.clear();
         currentNetList = currentCircuit->getFlattenCell(cell);
         state++;
@@ -156,102 +156,115 @@ void AutoCell::selectCell(Circuit* c, string cell) {
 
 }
 
-void AutoCell::autoFlow(string lpSolverFile){
-        autoflowLog << "Starting autoflow" << endl;
 
-        int nrTracks=2, bestNrTracks, conservative=0;
-        bestNrTracks=nrTracks;
-        time_t start,end;
-        time (&start);
+void AutoCell::autoFlow(string lpSolverFile, int conservative, int nr_tracks,
+                        int width_cost, int gate_mismatch_cost, int routing_cost, int routing_density_cost,
+                        int nr_gaps_cost, int nr_iterations, int nr_attempts, int horizontal_poly, int align_diffs,
+                        int reduce_vertical_routing, int optimize, int diffusion_stretching, int gridded_poly,
+                        int redundant_diff_cnts, int max_dff_cnts, int align_diffusion_cnts, int reduce_l_turns,
+                        int enable_dfm, int experimental, int debug, int time_limit, int relax_height) {
 
-        while(1) {
-                while(1) {
-                        cout << " Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
-                        autoflowLog << " Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
+        cout << "Calling autoflow" << endl;
 
-                        calcArea(nrTracks, conservative);
-                        foldTrans();
-                        // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
-                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
-                        if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
-                        if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
-                        if(nrTracks==4) break;
-                        nrTracks++;
-                }
-                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
-
-
-                route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
-                // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
-                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
-                if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
-                conservative++;
-                if(conservative>4)
-                        throw AstranError("Could not generate cell layout automatically");
-        }
-
-        time (&end);
-        double dif = difftime (end,start);
-        cout << "Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
-        autoflowLog << "Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
-
-}
-
-void AutoCell::autoFlowAll(string lpSolverFile){
-        int nrTracks=2, bestNrTracks, conservative=0;
+        int bestNrTracks;
         int totalLayouts = 0;
-        bestNrTracks=nrTracks;
+        bestNrTracks = nr_tracks;
         time_t start,end;
         time (&start);
+        bool speculate = false;
+
+        // auto t = std::time(nullptr);
+        // auto tm = *std::localtime(&t);
+        //
+        // std::ostringstream oss;
+        // oss << std::put_time(&tm, "%d-%m-%Y%H-%M-%S");
+        // auto strTime = oss.str();
+
+
+        int const TRACK2_THRESHOLD = 6;
+        int const TRACK3_THRESHOLD = 8;
+        int const VERTICAL_TRACK_THRESHOLD = 5;
 
         stringstream autoflowResult;
         while(1) {
                 while(1) {
-                        cout << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
-                        autoflowLog << "Trying with " << nrTracks << " tracks and conservative = " << conservative << " ..." << endl;
-                        calcArea(nrTracks, conservative);
+                        cout << "Trying with " << nr_tracks << " tracks and conservative = " << conservative << " ..." << endl;
+                        //autoflowLog << "Trying with " << NR_TRACKS << " tracks and conservative = " << CONSERVATIVE << " ..." << endl;
+
+                        calcArea(nr_tracks, conservative);
+                        cout << "Success cacl" << endl;
                         foldTrans();
+
+                        cout << "Success fold" << endl;
+
+                        speculate = false;
                         // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
-                        placeTrans(false, 300, 5, 4, 4, 1, 4, 2); //try with , 8)
-                        if(currentNetList.getMaxCongestioning()<=6 && nrTracks==2) break;
-                        if(currentNetList.getMaxCongestioning()<=8 && nrTracks==3) break;
-                        if(nrTracks==4) break;
-                        nrTracks++;
+                        // void AutoCell::placeTrans(bool speculate, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC) {
+                        placeTrans( speculate, nr_iterations, nr_attempts, width_cost, gate_mismatch_cost, routing_cost, routing_density_cost, nr_gaps_cost);                     //try with , 8)
+                        if(currentNetList.getMaxCongestioning() <= TRACK2_THRESHOLD && nr_tracks == 2) break;
+                        if(currentNetList.getMaxCongestioning() <= TRACK3_THRESHOLD && nr_tracks == 3) break;
+                        if(nr_tracks == 4) break;
+                        nr_tracks++;
                 }
-                placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
-                route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+                speculate = true;
+
+                placeTrans( speculate, nr_iterations, nr_attempts, width_cost, gate_mismatch_cost, routing_cost, routing_density_cost, nr_gaps_cost);
+                //placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
+                // route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
+
+                // void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize)
+                route(horizontal_poly, align_diffs, (currentNetList.getMaxCongestioning() <= VERTICAL_TRACK_THRESHOLD ? true : false), optimize);
+
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
 
-                if( compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) {
+                // bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly, int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, bool enableDFM, bool experimental, bool debug, int timeLimit)
+                // string lp_filename = currentNetList->getNetName() + "_" + to_string(nr_tracks) + to_string(conservative) + "_"+ strTime;
+                string lp_filename = currentNetList.getName() + "_" + to_string(nr_tracks) + to_string(conservative);
+
+                bool generatedLayout = compact(lpSolverFile, diffusion_stretching, gridded_poly, redundant_diff_cnts, max_dff_cnts, align_diffusion_cnts, reduce_l_turns, enable_dfm, experimental, debug, time_limit, lp_filename);
+
+                if( generatedLayout ) {
                         time (&end);
                         double dif = difftime (end,start);
                         totalLayouts++;
-                        autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+                        //autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+
+                }else if( relax_height == 1) {
+                        //Enabled the debug to allow generation of layout
+                        generatedLayout = compact(lpSolverFile, diffusion_stretching, gridded_poly, redundant_diff_cnts, max_dff_cnts, align_diffusion_cnts, reduce_l_turns, enable_dfm, experimental, debug, time_limit);
+                        if( generatedLayout ) {
+                                time (&end);
+                                double dif = difftime (end,start);
+                                totalLayouts++;
+                                //autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+                        }
 
                 }
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
 
                 conservative++;
-                if(conservative>4) {
+                if(conservative > 4) {
                         cout << "Reached end autoflow" << endl;
-                        autoflowLog << "Reached end autoflow" << endl;
+                        //autoflowLog << "Reached end autoflow" << endl;
                         break;
                 }
                 //throw AstranError("Could not generate cell layout automatically");
                 //throw AstranError("Reached end autoflow.");
         }
 
-        // time (&end);
-        // double dif = difftime (end,start);
+        time (&end);
+        double dif = difftime (end,start);
 
         cout << "Generated Layouts: " + to_string(totalLayouts) << endl;
-        autoflowLog << "Generated Layouts: " + to_string(totalLayouts) << endl;
+        //autoflowLog << "Generated Layouts: " + to_string(totalLayouts) << endl;
 
-        // cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+        cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+
+
+
 
 }
-
 
 
 void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
@@ -313,6 +326,7 @@ void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
         int EXPERIMENTAL;
         int DEBUG;
         int TIME_LIMIT;
+        int RELAX_HEIGHT;
 
         try{
                 CONSERVATIVE = configMap.at("CONSERVATIVE");
@@ -338,6 +352,7 @@ void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
                 EXPERIMENTAL = configMap.at("EXPERIMENTAL");
                 DEBUG = configMap.at("DEBUG");
                 TIME_LIMIT = configMap.at("TIME_LIMIT");
+                RELAX_HEIGHT = configMap.at("RELAX_HEIGHT");
 
         }catch(const std::out_of_range& e) {
                 cout << "Out of range error: " << e.what() << endl;
@@ -368,87 +383,13 @@ void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
         // WIDTH_COST 3
 
 
+        autoFlow(lpSolverFile, CONSERVATIVE, NR_TRACKS, WIDTH_COST,
+                 GATE_MISMATCH_COST, ROUTING_COST, ROUTING_DENSITY_COST,
+                 NR_GAPS_COST, NR_ITERATIONS, NR_ATTEMPTS, HORIZONTAL_POLY, ALIGN_DIFFS,
+                 REDUCE_VERTICAL_ROUTING, OPTIMIZE, DIFFUSION_STRETCHING, GRIDDED_POLY,
+                 REDUNDANT_DIFF_CNTS, MAX_DFF_CNTS, ALIGN_DIFFUSION_CNTS, REDUCE_L_TURNS,
+                 ENABLE_DFM, EXPERIMENTAL, DEBUG, TIME_LIMIT, RELAX_HEIGHT);
 
-
-
-        int bestNrTracks;
-        int totalLayouts = 0;
-        bestNrTracks = NR_TRACKS;
-        time_t start,end;
-        time (&start);
-        bool speculate = false;
-
-        stringstream autoflowResult;
-        while(1) {
-                while(1) {
-                        cout << "Trying with " << NR_TRACKS << " tracks and conservative = " << CONSERVATIVE << " ..." << endl;
-                        autoflowLog << "Trying with " << NR_TRACKS << " tracks and conservative = " << CONSERVATIVE << " ..." << endl;
-
-                        calcArea(NR_TRACKS, CONSERVATIVE);
-                        foldTrans();
-
-                        speculate = false;
-                        // placeTrans(false, 150, 3, 4, 4, 1, 4, 2); //try with , 8)
-                        // void AutoCell::placeTrans(bool speculate, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC) {
-                        placeTrans( speculate, NR_ITERATIONS, NR_ATTEMPTS, WIDTH_COST, GATE_MISMATCH_COST, ROUTING_COST, ROUTING_DENSITY_COST, NR_GAPS_COST); //try with , 8)
-                        if(currentNetList.getMaxCongestioning()<=6 && NR_TRACKS==2) break;
-                        if(currentNetList.getMaxCongestioning()<=8 && NR_TRACKS==3) break;
-                        if(NR_TRACKS==4) break;
-                        NR_TRACKS++;
-                }
-                speculate = true;
-
-                placeTrans( speculate, NR_ITERATIONS, NR_ATTEMPTS, WIDTH_COST, GATE_MISMATCH_COST, ROUTING_COST, ROUTING_DENSITY_COST, NR_GAPS_COST);
-                //placeTrans(true, 300, 5, 4, 4, 1, 4, 2);
-                // route(true, false, (currentNetList.getMaxCongestioning()<=5 ? true : false), true);
-
-                // void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize)
-                route(HORIZONTAL_POLY, ALIGN_DIFFS, (currentNetList.getMaxCongestioning()<=5 ? true : false), OPTIMIZE);
-                // if(compact(lpSolverFile, true, false, 50, 10, true, true, true, false, false, 3600)) break;
-                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, false, 3600)) break;
-
-                // bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly, int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, bool enableDFM, bool experimental, bool debug, int timeLimit)
-                bool generatedLayout = compact(lpSolverFile, DIFFUSION_STRETCHING, GRIDDED_POLY, REDUNDANT_DIFF_CNTS, MAX_DFF_CNTS, ALIGN_DIFFUSION_CNTS, REDUCE_L_TURNS, ENABLE_DFM, EXPERIMENTAL, DEBUG, TIME_LIMIT);
-
-                if( generatedLayout ) {
-                        time (&end);
-                        double dif = difftime (end,start);
-                        totalLayouts++;
-                        autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
-
-                }else if( DEBUG != 1) {
-                        //Enabled the debug to allow generation of layout
-                        DEBUG = 1;
-                        generatedLayout = compact(lpSolverFile, DIFFUSION_STRETCHING, GRIDDED_POLY, REDUNDANT_DIFF_CNTS, MAX_DFF_CNTS, ALIGN_DIFFUSION_CNTS, REDUCE_L_TURNS, ENABLE_DFM, EXPERIMENTAL, DEBUG, TIME_LIMIT);
-                        if( generatedLayout ) {
-                                time (&end);
-                                double dif = difftime (end,start);
-                                totalLayouts++;
-                                autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
-                        }
-
-                        //Set to default DEBUG
-                        DEBUG = configMap.at("DEBUG");
-                }
-                // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
-
-                CONSERVATIVE++;
-                if(CONSERVATIVE > 4) {
-                        cout << "Reached end autoflow" << endl;
-                        autoflowLog << "Reached end autoflow" << endl;
-                        break;
-                }
-                //throw AstranError("Could not generate cell layout automatically");
-                //throw AstranError("Reached end autoflow.");
-        }
-
-        // time (&end);
-        // double dif = difftime (end,start);
-
-        cout << "Generated Layouts: " + to_string(totalLayouts) << endl;
-        autoflowLog << "Generated Layouts: " + to_string(totalLayouts) << endl;
-
-        // cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
 
 }
 
@@ -456,12 +397,13 @@ void AutoCell::autoFlowConf(string lpSolverFile, string configurationFile){
 
 void AutoCell::foldTrans() {
         checkState(2);
-        autoflowLog << "-> Applying folding..." << endl;
+        //autoflowLog << "-> Applying folding..." << endl;
         cout << "-> Applying folding..." << endl;
 
-        autoflowLog << "-> Number of transistors before folding: " << currentNetList.size() << " -> P(" << currentNetList.pSize() << ") N(" << currentNetList.nSize() << ")" << endl;
+        cout << "-> Number of transistors before folding: " << currentNetList.size() << " -> P(" << currentNetList.pSize() << ") N(" << currentNetList.nSize() << ")" << endl;
         currentNetList.folding(static_cast<float>(pSize) / currentRules->getScale(), static_cast<float>(nSize) / currentRules->getScale(), currentCircuit->getVddNet(), currentCircuit->getGndNet());
-        autoflowLog << "-> Number of transistors after folding: " << currentNetList.size() << " -> P(" << currentNetList.pSize() << ") N(" << currentNetList.nSize() << ")" << endl;
+
+        cout << "-> Number of transistors after folding: " << currentNetList.size() << " -> P(" << currentNetList.pSize() << ") N(" << currentNetList.nSize() << ")" << endl;
         currentNetList.getOrderingP().clear();
         currentNetList.getOrderingN().clear();
         state++;
@@ -471,7 +413,7 @@ void AutoCell::foldTrans() {
 void AutoCell::placeTrans(bool speculate, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC) {
         checkState(3);
         cout << "-> Placing transistors..." << endl;
-        autoflowLog << "-> Placing transistors..." << endl;
+        //autoflowLog << "-> Placing transistors..." << endl;
         int bestCost, currentCost;
 
         if (speculate) {
@@ -499,7 +441,7 @@ void AutoCell::placeTrans(bool speculate, int saquality, int nrAttempts, int wC,
                                 bestCost=currentCost;
                                 bestNOrdering=currentNetList.getOrderingN();
                                 bestPOrdering=currentNetList.getOrderingP();
-                                autoflowLog << "-> New best transistor ordering found with cost: " << bestCost << endl;
+                                //autoflowLog << "-> New best transistor ordering found with cost: " << bestCost << endl;
                         }
                 }
                 currentNetList.setOrderingN(bestNOrdering);
@@ -533,7 +475,7 @@ bool AutoCell::testGap(vector<TransitorTerminal>::iterator last_it, vector<Trans
 void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize) {
         checkState(4);
         cout << "-> Routing cell...";
-        autoflowLog << "-> Routing cell...";
+        //autoflowLog << "-> Routing cell...";
 
         this->hPoly=hPoly;
         this->reduceVRt=reduceVRt;
@@ -570,7 +512,7 @@ void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool opt
         vector<int>::iterator inouts_it = currentNetList.getInouts().begin();
         vdd=gnd=-1;
         while (inouts_it != currentNetList.getInouts().end()) {
-                //		cerr << currentCircuit->getGndNet()  << " - " <<  currentCircuit->getVddNet() << " - " << currentNetList.getNetName(*inouts_it) << endl;
+                cerr << currentCircuit->getGndNet()  << " - " <<  currentCircuit->getVddNet() << " - " << currentNetList.getNetName(*inouts_it) << endl;
                 if (currentNetList.getNetName(*inouts_it) == currentCircuit->getVddNet()) {
                         vdd = *inouts_it;
                 } else if (currentNetList.getNetName(*inouts_it) == currentCircuit->getGndNet()) {
@@ -755,7 +697,7 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
         checkState(5);
         cout << "-> Compacting layout..." << endl;
-        autoflowLog << "-> Compacting layout..." << endl;
+        //autoflowLog << "-> Compacting layout..." << endl;
 
         this->diffStretching=diffStretching;
         this->griddedPoly=griddedPoly;
@@ -1130,6 +1072,9 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         int width = cpt.getVariableVal("width");
         int height = cpt.getVariableVal("height");
 
+        cout << "WIDTH:" << width << endl;
+        cout << "HEIGHT:" << height << endl;
+
         //Create M1P Layers
         list <Box>::iterator net_it;
         for ( net_it = currentLayout.layers[MET1].begin(); net_it != currentLayout.layers[MET1].end(); net_it++ )
@@ -1247,10 +1192,10 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                 }
 
                 if(!btP) {
-                        autoflowLog << "-> WARNING: Could not insert PTAPs" << endl;
+                        cout << "-> WARNING: Could not insert PTAPs" << endl;
                 }
                 if(!btN) {
-                        autoflowLog << "-> WARNING: Could not insert NTAPs" << endl;
+                        cout << "-> WARNING: Could not insert NTAPs" << endl;
                 }
         }
         currentLayout.setWidth(width);
@@ -1306,28 +1251,21 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                 currentCircuit->insertLayout(currentLayout);
         }else{
                 int i = 0;
-                while( currentCircuit->getLayout( layoutName + "_atmp_" + to_string(i) ) != NULL ) {
+                while( currentCircuit->getLayout( cpt.getLPName() ) != NULL ) {
                         i++;
                 }
-                currentLayout.setName(layoutName + "_atmp_" + to_string(i));
+                currentLayout.setName(cpt.getLPName());
                 currentCircuit->insertLayout(currentLayout);
         }
 
         // currentCircuit->insertLayout(currentLayout);
         cout << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
 
-        autoflowLog << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
+        //autoflowLog << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
 
         state++;
         return true;
 }
-
-
-
-
-// bool Autocell::solToLayout(){
-//
-// }
 
 
 
@@ -1989,7 +1927,7 @@ void AutoCell::insertDistanceRuleDumb(vector<Box*> &geometries, Compaction &cpt,
 void AutoCell::printGraph() {
         for (list<Element>::iterator elements_it = elements.begin(); elements_it != elements.end(); elements_it++) {
                 //cout << *elements_it;
-                autoflowLog << *elements_it;
+                //autoflowLog << *elements_it;
         }
 }
 

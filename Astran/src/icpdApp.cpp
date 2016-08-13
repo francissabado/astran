@@ -28,9 +28,9 @@ bool icpdFrmApp::Initialize(int& argc, wchar_t **argv) {
 
         gui_enabled = !parser.Found(wxT_2("shell"));
 
-        // cout << " STAT:" << parser.Parse(true) << endl;
-        // cout << " FILE:" << parser.GetParam(0).mb_str() << endl;
-        // cout << " CONT:" << parser.GetParamCount() << endl;
+        cout << " STAT:" << parser.Parse(true) << endl;
+        cout << " FILE:" << parser.GetParam(0).mb_str() << endl;
+        cout << " CONT:" << parser.GetParamCount() << endl;
 
         if (parser.GetParamCount() == 1) {
                 cmdFilename = parser.GetParam(0);
