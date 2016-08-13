@@ -76,8 +76,8 @@ public:
         int solveLP(string lpSolverFile, int timeLimit, string otherParams = "") ;
         bool isConstraintsGenerated();
         bool generateLPConstraints();
-        
-        int solve(string lpSolverFile, int timeLimit);
+
+        int solve(string lpSolverFile, int timeLimit = 3600, string otherParams = "");
 
         int getVariableVal( string name );
 
