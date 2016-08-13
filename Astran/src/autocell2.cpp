@@ -6,6 +6,7 @@
 
 AutoCell::AutoCell() : currentCell(NULL), state(0), index(0) {
         string file_autoflowLog = "autoflow.log";
+        remove(file_autoflowLog.c_str());
         autoflowLog.open(file_autoflowLog.c_str());
 }
 
@@ -750,8 +751,8 @@ void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool opt
 }
 
 bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
-        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, 
-        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
+                       int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns,
+                       bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
         checkState(5);
         cout << "-> Compacting layout..." << endl;
         autoflowLog << "-> Compacting layout..." << endl;
@@ -1098,6 +1099,16 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                 return false;
 
 
+
+
+
+        //Write out geometries and compaction
+
+
+
+
+
+
         //Code to process all the variables gathered from the .sol file
         for (int i = 0; i < geometries.size(); i++) {
 
@@ -1310,6 +1321,15 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         state++;
         return true;
 }
+
+
+
+
+// bool Autocell::solToLayout(){
+//
+// }
+
+
 
 
 string AutoCell::insertGate(vector<Box*> &geometries, Compaction &cpt, int transistor, list<Element>::iterator elements_it, vector<string> &currentPolNodes, string lastCnt, string diffEnc, string &lastGate, int &lastGateLength, string lastDiff, string currentDiff, layer_name l){

@@ -73,7 +73,8 @@ public:
         void insertLPMinVar( string v );
         void insertLPMinVar( string v, int i );
         int proccessLPSol();
-        int solveLP(string lpSolverFile, int timeLimit, string otherParams = "") ;
+        int solveLP(string lpSolverFile, int timeLimit = 3600, string otherParams = "") ;
+        int remoteSolveLP(string lpSolverFile, int timeLimit = 3600, string otherParam = "");
         bool isConstraintsGenerated();
         bool generateLPConstraints();
 

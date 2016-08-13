@@ -35,12 +35,12 @@ public:
         void foldTrans();
         void placeTrans(bool ep, int saquality, int nrAttempts, int wC, int gmC, int rC, int congC, int ngC);
         void route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool optimize);
-//        bool compact(string lpSolverFile, int diffStretching, int griddedPolly, 
-//        int rdCntsCost, int maxDiffConts, int alignDiffConts, int reduceLturns, 
+//        bool compact(string lpSolverFile, int diffStretching, int griddedPolly,
+//        int rdCntsCost, int maxDiffConts, int alignDiffConts, int reduceLturns,
 //        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename);
-        
+
         bool compact(string lpSolverFile, int diffStretching, int griddedPoly,
-        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, 
+        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns,
         bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename = "ILPmodel");
         void selectCell(Circuit* c, string cell);
         void setMetPriority(int x) {
@@ -130,6 +130,48 @@ public:
                 }
         };
 
+
+        // class GeometryLayouts{
+        // public:
+        //     string cellName = "";
+        //     Compaction* compactObj = NULL;
+        //     vector<Box *> *geometryObj = NULL:
+        //
+        //
+        //     GeometryLayouts(string file){
+        //         ifstream geoIn(file.c_str());
+        //
+        //         string line
+        //
+        //         getline(geoIn)
+        //
+        //     }
+        //
+        //
+        //     bool print(){
+        //         if( compactObj == NULL | geometryObj == NULL){
+        //             cout << "Unabled to print. Objects undefined" << endl;
+        //         }else{
+        //             string geoOutFile = cellName + ".geolay";
+        //             ofstream geoOut(geoOutFile.c_str());
+        //
+        //             geoOut << "#Cellname" << endl;
+        //             geoOut << cellName << endl;
+        //
+        //             geoOut << "#Compaction" << endl;
+        //             geoOut << compactObj->to_string() << endl;
+        //
+        //             geoOut << "#Geometry" << endl;
+        //             for( vector<Box *>::iterator i = geometryObj->begin(); i != geometryObj->end(); i++ ){
+        //                 geoOut << i->to_string() << endl;
+        //             }
+        //
+        //
+        //         }
+        //     }
+        //
+        // }
+
         list<Element> elements;
         map<string,int> inoutPins;
         Element* createElement(int vcost, int nDiffIni, int pDiffIni, int nEnd, int pEnd, TransTerminalType type);
@@ -139,6 +181,9 @@ public:
         std::unique_ptr<GraphRouter> rt;
         CellNetlst currentNetList;
         CLayout currentLayout;
+        // vector<GeometryLayouts> geometryLayouts;
+
+
 
         void insertCntPol(vector<Box*> &geometries, Compaction &cpt, string cntPos, vector<string> polTracks, int pos);
         string insertCntDif(vector<Box*> &geometries, Compaction &cpt, string currentCnt, string &lastGate, string &lastCnt,  layer_name l);

@@ -546,7 +546,8 @@ int Compaction::solve(string lpSolverFile, int timeLimit, string otherParams) {
 
 
         //Solve using lpSolver
-        solveLP(lpSolverFile, timeLimit, otherParams);
+        // solveLP(lpSolverFile, timeLimit, otherParams);
+        remoteSolveLP(lpSolverFile, timeLimit, otherParams);
         //Other parameters possible
         // int Compaction::solveLP(string lpSolverFile, int timeLimit, string otherParams) {
 
@@ -712,6 +713,69 @@ int Compaction::solveLP(string lpSolverFile, int timeLimit, string otherParams) 
         return 1;
 
 }
+
+
+//Other params must be syntax correct
+//Assume files are already set up
+int Compaction::remoteSolveLP(string lpSolverFile, int timeLimit, string otherParams) {
+// bool Compaction::solveLP(){
+        //Remote settingsName
+        string user = "fsabado";
+        string server = "digisrv2";
+        string projectDir = "~/gurobiRun";
+
+        //Copying setup file
+        // FILE *remoteLog = _open("cp")
+        //Assumes that astran is run on current directory
+        int result = system("./setupRemote.sh");
+
+        //Calling LP Solver
+        string const solFileName = lp_filename + ".sol";
+
+        if (FILE *file = fopen(solFileName.c_str(), "r")) {
+                fclose(file);
+                const string newName = lp_filename + to_string(time(NULL)) + ".sol";
+                std::rename(solFileName.c_str(), newName.c_str());
+        }
+
+        remove(solFileName.c_str());
+
+        string cmd = "\"" + lpSolverFile + "\" TimeLimit=" + to_string(timeLimit) + " ResultFile=" + solFileName + " " + otherParams + " " + lp_filename + ".lp";
+
+        cout << "-> Running command: " << cmd << endl;
+
+        FILE *solverLog = _popen(cmd.c_str(), "r");
+
+        if(solverLog == NULL)
+                throw AstranError("Problem executing: " + cmd);
+
+        cout << "-> To interrupt earlier and get the current best solution, type in a terminal: kill -2 [gurobi process]" << endl;
+        cout << "-> * and H means new feasible solution found:";
+        cerr << " ";
+
+        char line[150];
+        while (fgets(line, 150, solverLog)) {
+                istringstream s(line);
+                string status;
+                s >> status;
+                if(status!="Warning:")
+                        printf("%s",line);
+
+                if(status == "H" || status == "*")
+                        cerr << status;
+
+                if(status == "ERROR" || status == "Time" || status == "Unable" || status == "Wrote" || status == "Optimal" || status == "Model")
+                        cout << endl << line;
+                if(status == "Unable" || status == "Model")
+                        return 0;
+        }
+
+        _pclose(solverLog);
+        return 1;
+
+}
+
+
 
 
 //Source: http://stackoverflow.com/questions/12774207/fastest-way-to-check-if-a-file-exist-using-standard-c-c11-c
