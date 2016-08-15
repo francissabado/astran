@@ -750,8 +750,8 @@ void AutoCell::route(bool hPoly, bool increaseIntTracks, int reduceVRt, bool opt
 }
 
 bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
-        int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns, 
-        bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
+                       int rdCntsCost, int maxDiffCnts, int alignDiffConts, int reduceLturns,
+                       bool enableDFM, bool experimental, bool debug, int timeLimit, string lp_filename) {
         checkState(5);
         cout << "-> Compacting layout..." << endl;
         autoflowLog << "-> Compacting layout..." << endl;
@@ -1153,11 +1153,16 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
 
                         //Bottom Taps and diffusion
                         currentLayout.addPolygon( 0, -currentRules->getRule(W2DF) / 2, width, currentRules->getRule(W2DF) / 2, PDIF);
-                        currentLayout.addPolygon( -0.3, -currentRules->getRule(W2DF) / 2 - currentRules->getRule(E1IPDF), width, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), PSEL);
+
+                        float SEL_OFFSET = 0.03;
+                        int int_SEL_OFFSET = currentRules->getIntValue(SEL_OFFSET);
+
+                        currentLayout.addPolygon( -int_SEL_OFFSET, -currentRules->getRule(W2DF) / 2 - currentRules->getRule(E1IPDF), width + int_SEL_OFFSET, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), PSEL);
 
                         //Top Taps and diffusion
                         currentLayout.addPolygon( 0, height + currentRules->getRule(W2DF) / 2, width, height-currentRules->getRule(W2DF) / 2, NDIF);
-                        currentLayout.addPolygon( -0.3, height + currentRules->getRule(W2DF) / 2 + currentRules->getRule(E1INDF), width, height-currentRules->getRule( W2DF) / 2 - currentRules->getRule(E1IPDF), NSEL);
+
+                        currentLayout.addPolygon( -int_SEL_OFFSET, height + currentRules->getRule(W2DF) / 2 + currentRules->getRule(E1INDF), width + int_SEL_OFFSET, height-currentRules->getRule( W2DF) / 2 - currentRules->getRule(E1IPDF), NSEL);
                 }
                 //search for blocking regions in the PTAP area add its interval to a list
                 btIntervalsN=btIntervalsP;
@@ -1257,7 +1262,16 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         // currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF )
 
         //Draw sel Borders
+
+        // ofstream testFile("TestFile.log", ios::out);
+
         int selBorder=currentRules->getIntValue(currentCircuit->getpnSelBorder());
+
+        // testFile << "---------------------------------selBorder = " + to_string(selBorder) << endl;
+        // cout << "-----------------------------------selBorder = " + to_string(selBorder) << endl;
+
+        // testFile.close();
+
         currentLayout.addPolygon(-selBorder, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), width + selBorder, cpt.getVariableVal("posNWell"), NSEL);
 
         currentLayout.addPolygon(-selBorder, cpt.getVariableVal("posNWell"), width + selBorder, height - ( currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF )), PSEL);
@@ -1285,6 +1299,11 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
 
         //Don't need Pwell
         //currentLayout.addPolygon(-nWellBorder, -nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), PWEL);
+
+
+        //Adding in LVT
+
+
 
 
         //	currentLayout.merge();

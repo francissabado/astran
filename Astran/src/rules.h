@@ -30,9 +30,14 @@ enum rule_name {
         N_RULES
 };
 
-enum layer_name {CONT,POLY,NDIF,PDIF,NSEL,PSEL,NWEL,PWEL,VIA1,VIA2,VIA3,VIA4,
-                 VIA5,VIA6,VIA7,VIA8,VIA9,MET1,MET2,MET3,MET4,MET5,MET6,MET7,
-                 MET8,MET9,MET10,CELLBOX,MET1P,MET2P,MET3P,
+enum layer_name {CONT,POLY,NDIF,PDIF,NSEL,PSEL,NWEL,PWEL,
+                VIA1,VIA2,VIA3,VIA4,VIA5,VIA6,VIA7,VIA8,VIA9,
+                 //Metals
+                 MET1,MET2,MET3,MET4,MET5,MET6,MET7,MET8,MET9,MET10,
+                 CELLBOX,
+                 //Pins
+                 MET1P,MET2P,MET3P,
+                 //Tech Info
                  TECHNAME,
                  MLAYERS, // # of metal layers
                  SOI,
