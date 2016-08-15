@@ -528,7 +528,7 @@ bool CellNetlst::transPlacement(bool newPl, int saquality, int nrattempts, int w
         ngCost=ngC;
         this->vddNet=vddNet;
         this->gndNet=gndNet;
-        bool PRINT_PROGRESS = false;
+        bool PRINT_PROGRESS = true;
 
         unsigned long i;
         if(newPl) {
