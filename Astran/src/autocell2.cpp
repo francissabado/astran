@@ -203,6 +203,9 @@ void AutoCell::autoFlowAll(string lpSolverFile){
         time_t start,end;
         time (&start);
 
+        autoflowLog << "-----------" << "AutoflowAll" << "-----------" << endl;
+        autoflowLog << "-----------" << currentCell->getName() << "-----------" << endl;
+
         stringstream autoflowResult;
         while(1) {
                 while(1) {
@@ -226,7 +229,10 @@ void AutoCell::autoFlowAll(string lpSolverFile){
                         time (&end);
                         double dif = difftime (end,start);
                         totalLayouts++;
-                        autoflowLog << "-> Total generation time for cell " << currentCell->getName() << endl;
+
+
+                        autoflowLog << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
+                        cout << "-> Total generation time for cell " << currentCell->getName() << ": " << dif << "s" << endl;
 
                 }
                 // if(compact(lpSolverFile, true, false, 50, 10, true, true, false, false, true, 3600)) break;
@@ -1329,12 +1335,15 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                 while( currentCircuit->getLayout( layoutName + "_atmp_" + to_string(i) ) != NULL ) {
                         i++;
                 }
-                currentLayout.setName(layoutName + "_atmp_" + to_string(i));
+                layoutName = layoutName + "_atmp_" + to_string(i);
+                currentLayout.setName(layoutName);
                 currentCircuit->insertLayout(currentLayout);
         }
 
         // currentCircuit->insertLayout(currentLayout);
         cout << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
+
+        autoflowLog << "Layout Name:" << layoutName << endl;
 
         autoflowLog << "-> Cell Size (W x H): " << static_cast<float>(currentLayout.getWidth()) / currentRules->getScale() << " x " << static_cast<float>(currentLayout.getHeight()) / currentRules->getScale() << endl;
 
