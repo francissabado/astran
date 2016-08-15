@@ -30,7 +30,12 @@ enum rule_name {
         N_RULES
 };
 
-enum layer_name {CONT,POLY,NDIF,PDIF,NSEL,PSEL,NWEL,PWEL,
+enum layer_name {CONT,POLY,NDIF,PDIF,
+                //Selects
+                NSEL,PSEL,NWEL,PWEL,
+                //LVT Option
+                LVT,
+                //Vias
                 VIA1,VIA2,VIA3,VIA4,VIA5,VIA6,VIA7,VIA8,VIA9,
                  //Metals
                  MET1,MET2,MET3,MET4,MET5,MET6,MET7,MET8,MET9,MET10,
@@ -120,6 +125,7 @@ private:
                 {"PSEL","Select P-Type Diffusion","","","",L_DRAWING},
                 {"NWEL","N Well","","","",L_DRAWING},
                 {"PWEL","P Well","","","",L_DRAWING},
+                {"LVT","Low voltage transistor","","","",L_DRAWING},
                 {"VIA1","Via 1","","","",L_DRAWING},
                 {"VIA2","Via 2","","","",L_DRAWING},
                 {"VIA3","Via 3","","","",L_DRAWING},

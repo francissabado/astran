@@ -1151,11 +1151,11 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
                         cntPos= currentRules->getRule(W2DF)/2 + currentRules->getRule(E2DFCT);
                         minDiffDist= cntPos + currentRules->getRule(W2CT) + currentRules->getRule(E2DFCT) + currentRules->getRule(S1DFDF);
 
-                        //Bottom Taps and diffusion
-                        currentLayout.addPolygon( 0, -currentRules->getRule(W2DF) / 2, width, currentRules->getRule(W2DF) / 2, PDIF);
-
                         float SEL_OFFSET = 0.03;
                         int int_SEL_OFFSET = currentRules->getIntValue(SEL_OFFSET);
+
+                        //Bottom Taps and diffusion
+                        currentLayout.addPolygon( 0, -currentRules->getRule(W2DF) / 2, width, currentRules->getRule(W2DF) / 2, PDIF);
 
                         currentLayout.addPolygon( -int_SEL_OFFSET, -currentRules->getRule(W2DF) / 2 - currentRules->getRule(E1IPDF), width + int_SEL_OFFSET, currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ), PSEL);
 
@@ -1293,18 +1293,30 @@ bool AutoCell::compact(string lpSolverFile, int diffStretching, int griddedPoly,
         //PrBoundary
         currentLayout.addPolygon(0, 0, width, height, CELLBOX);
 
+        int int_S1NWDF = currentRules->getIntValue(0.24);
+
         //NWELL Border
         int nWellBorder=currentRules->getIntValue(currentCircuit->getnWellBorder());
-        currentLayout.addPolygon(-nWellBorder, height + nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), NWEL);
+        currentLayout.addPolygon(
+                -nWellBorder,
+                height + max(nWellBorder, currentRules->getRule(W2DF) / 2 + int_S1NWDF),
+                width + nWellBorder,
+                cpt.getVariableVal("posNWell"),
+                NWEL);
+
 
         //Don't need Pwell
         //currentLayout.addPolygon(-nWellBorder, -nWellBorder, width + nWellBorder, cpt.getVariableVal("posNWell"), PWEL);
 
 
         //Adding in LVT
-
-
-
+        currentLayout.addPolygon(
+                0,
+                currentRules->getRule(W2DF) / 2 + currentRules->getRule( E1IPDF ),
+                width,
+                height - (currentRules->getRule(W2DF) / 2 + currentRules->getRule(E1INDF)),
+                LVT
+                );
 
         //	currentLayout.merge();
         //Code to add the layout to the list
