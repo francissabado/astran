@@ -123,7 +123,7 @@ void AutoCell::calcArea(int nrIntTracks, int reduceMetTracks) {
                 //Original
                 //nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(E1P1DF);
 
-                nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(S1DFP1);
+                nDif_endY = currentRules->getRule(W2DF)/2 + currentRules->getRule(E1IPDF) + currentRules->getRule(E1IPGA);
                 pDif_endY = height - nDif_endY;
         }else{
                 nDif_endY = currentRules->getRule(E1P1DF) + currentRules->getRule(S1P1P1) / 2;
